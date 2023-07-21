@@ -1,0 +1,11 @@
+[run]
+branch = true
+
+[report]
+include=
+    fetcher/*
+    tests/*
+omit=
+    venv/*
+    fetcher/deps/*
+fail_under=74

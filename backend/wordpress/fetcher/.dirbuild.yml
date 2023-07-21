@@ -1,0 +1,7 @@
+targets:
+  deps:
+    depends:
+      - 'Pipfile'
+      - 'Pipfile.lock'
+    output: fetcher/deps/
+    command: make deps-no-cache
