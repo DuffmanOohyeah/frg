@@ -1,0 +1,29 @@
+#!/bin/bash
+
+set -euo pipefail
+
+ORIGIN_MASTER_SHA="$(git ls-remote origin master | sed 's/\s.*//')"
+LOCAL_MASTER_SHA="$(git rev-parse master)"
+SANDBOX_STACK_NAME="FrgSandboxStack"
+
+_NODE_SCRIPT='const fs = require("fs"); const data = JSON.parse(fs.readFileSync(0, "utf-8")); console.log(data.Stacks[0].Outputs.find(a => a.OutputKey === "ReleaseSha").OutputValue)'
+
+SANDBOX_STACK_SHA="$(aws cloudformation describe-stacks --stack-name "$SANDBOX_STACK_NAME" | node -e "$_NODE_SCRIPT")"
+
+if [[ $SANDBOX_STACK_SHA == $ORIGIN_MASTER_SHA ]]; then
+    echo "Yes, the sandbox environment is up to date with origin master at $SANDBOX_STACK_SHA"
+    if [[ $ORIGIN_MASTER_SHA != $LOCAL_MASTER_SHA ]]; then
+        echo "But your local master is not up to date with the remote (local: $LOCAL_MASTER_SHA)"
+    fi
+    exit 0
+elif [[ $ORIGIN_MASTER_SHA == $LOCAL_MASTER_SHA ]]; then
+    echo "No, the sandbox environment is not up to date (it is at $SANDBOX_STACK_SHA), but your local master is up to date with the remote"
+    current_branch="$(git rev-parse --abbrev-ref HEAD)"
+    if [[ $current_branch != "master" ]]; then
+        echo "And the current branch is not master"
+    fi
+    exit 1
+fi
+
+echo "No, the sandbox is not up to date (it is at $SANDBOX_STACK_SHA), and your local master is not up to date with the remote either"
+exit 2

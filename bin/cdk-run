@@ -1,0 +1,35 @@
+#!/bin/bash -e
+
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+input_command="$1"
+input_environment="$2"
+input_brand="$3"
+
+if [[ -z $input_environment ]]; then
+    echo -e "${RED}==> No environment provided${NC}"
+    exit 1
+fi
+
+if [[ -z $input_brand ]]; then
+    echo -e "${RED}==> No brand provided${NC}"
+    exit 1
+fi
+
+if [[ $input_command = "diff" ]]; then
+    cmd="npm run -- env ENVIRONMENT_NAME=$input_environment env BRAND=$input_brand cdk diff"
+elif [[ $input_command = "deploy" ]]; then
+    cmd="npm run -- env ENVIRONMENT_NAME=$input_environment env BRAND=$input_brand cdk deploy"
+else
+    >&2 echo "Unknown command: $input_command"
+    exit 1
+fi
+
+if [[ -z $is_sandbox ]]; then
+    cmd="$cmd --app lib/frg-app.js"
+fi
+
+npm run build
+eval $cmd

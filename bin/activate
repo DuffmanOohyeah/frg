@@ -1,0 +1,292 @@
+#!/usr/bin/env node
+
+const fs = require('fs');
+const https = require('https');
+const os = require('os');
+const path = require('path');
+const childProcess = require('child_process');
+const promisify = require('util').promisify;
+const yargs = require('yargs');
+
+const stageKmsKey = 'arn:aws:kms:eu-west-2:324899745025:key/5d12002a-9a6d-43de-9e08-fd9b7302d794';
+const prodKmsKey = 'arn:aws:kms:eu-west-2:144908211154:key/cc3f7343-31a4-43c7-9c1d-728aec28ff99';
+
+// CONFIG
+const envs = {
+  infrastructure: {
+    profiles: ['frg-org-infrastructure-IsotomaAdmin'],
+  },
+  prod: {
+    profiles: ['frg-org-production-IsotomaAdmin'],
+    kmsKeyArn: prodKmsKey,
+  },
+  'prod-anderson': {
+    profiles: ['frg-org-production-IsotomaAdmin'],
+    kmsKeyArn: prodKmsKey,
+  },
+  'prod-jefferson': {
+    profiles: ['frg-org-production-IsotomaAdmin'],
+    kmsKeyArn: prodKmsKey,
+  },
+  'prod-mason': {
+    profiles: ['frg-org-production-IsotomaAdmin'],
+    kmsKeyArn: prodKmsKey,
+  },
+  'prod-nelson': {
+    profiles: ['frg-org-production-IsotomaAdmin'],
+    kmsKeyArn: prodKmsKey,
+  },
+  'prod-nigel': {
+    profiles: ['frg-org-production-IsotomaAdmin'],
+    kmsKeyArn: prodKmsKey,
+  },
+  'prod-washington': {
+    profiles: ['frg-org-production-IsotomaAdmin'],
+    kmsKeyArn: prodKmsKey,
+  },
+  'prod-dr': {
+    profiles: ['frg-org-production-IsotomaAdmin'],
+    kmsKeyArn: prodKmsKey,
+  },
+  'stage-anderson': {
+    profiles: ['frg-org-stage-IsotomaAdmin'],
+    kmsKeyArn: stageKmsKey,
+  },
+  'stage-jefferson': {
+    profiles: ['frg-org-stage-IsotomaAdmin'],
+    kmsKeyArn: stageKmsKey,
+  },
+  'stage-mason': {
+    profiles: ['frg-org-stage-IsotomaAdmin'],
+    kmsKeyArn: stageKmsKey,
+  },
+  'stage-nelson': {
+    profiles: ['frg-org-stage-IsotomaAdmin'],
+    kmsKeyArn: stageKmsKey,
+  },
+  'stage-nigel': {
+    profiles: ['frg-org-stage-IsotomaAdmin'],
+    kmsKeyArn: stageKmsKey,
+  },
+  'stage-washington': {
+    profiles: ['frg-org-stage-IsotomaAdmin'],
+    kmsKeyArn: stageKmsKey,
+  },
+  'stage-frgtech': {
+    profiles: ['frg-org-stage-IsotomaAdmin'],
+    kmsKeyArn: stageKmsKey,
+  },
+  dev: {
+    profiles: ['frg-org-stage-IsotomaAdmin'],
+    kmsKeyArn: stageKmsKey,
+  },
+};
+
+const versions = {
+  sops: '3.5.0',
+};
+
+const execFilePromise = promisify(childProcess.execFile);
+
+const bytesToReadable = bytes => {
+  if (bytes < 1024) {
+    return `${bytes}B`;
+  } else if (bytes < 1024 * 1024) {
+    return `${Math.round(bytes / 1024)}KB`;
+  } else {
+    return `${Math.round(bytes / (1024 * 1024))}MB`;
+  }
+};
+
+const pipeWithProgress = (readable, writable, progressCallback) => {
+  const contentLength = parseInt(readable.headers['content-length'], 10);
+  let progress = 0;
+  const headers = null;
+  readable.on('data', data => {
+    writable.write(data, () => {
+      progress += data.length;
+      process.stderr.clearLine();
+      process.stderr.write(Math.round((progress / contentLength) * 100) + '% ' + `(${bytesToReadable(progress)} / ${bytesToReadable(contentLength)})` + '\r');
+    });
+  });
+  readable.on('end', () => {
+    process.stderr.clearLine();
+    console.error('Done ' + `(${bytesToReadable(progress)})`);
+    writable.end();
+  });
+};
+
+const downloadFile = async (url, targetPath) => {
+  return new Promise((res, rej) => {
+    const request = https
+      .get(url, response => {
+        if (response.headers.location) {
+          process.on('SIGINT', () => {});
+          process.on('SIGTERM', () => {});
+
+          downloadFile(response.headers.location, targetPath)
+            .then(res)
+            .catch(rej);
+        } else {
+          const file = fs.createWriteStream(targetPath);
+          pipeWithProgress(response, file);
+          file.on('finish', () => {
+            file.close(err => {
+              if (err) {
+                rej(err);
+              } else {
+                res();
+              }
+            });
+
+            process.on('SIGINT', () => {});
+            process.on('SIGTERM', () => {});
+          });
+        }
+      })
+      .on('abort', () => {
+        fs.unlink(targetPath, () => {});
+        rej('Download aborted');
+      })
+      .on('error', err => {
+        fs.unlink(targetPath, () => {});
+        rej(err);
+      })
+      .flushHeaders();
+
+    const abort = () => {
+      if (request) {
+        request.abort();
+      }
+      throw new Error('Aborting');
+    };
+
+    process.on('SIGINT', abort);
+    process.on('SIGTERM', abort);
+  });
+};
+
+const chmodPromise = promisify(fs.chmod);
+
+const dependencies = {
+  sops: {
+    updateRequired: async targetVersion => {
+      const output = await execFilePromise(path.join(__dirname, 'sops'), ['--version']);
+      const firstLine = output.stdout.split('\n')[0];
+      const semverVersion = firstLine
+        .replace(/^sops /, '')
+        .replace(/ .*/, '')
+        .trim();
+      return semverVersion !== targetVersion;
+    },
+    download: async (version, platformType, targetPath) => {
+      const url = `https://github.com/mozilla/sops/releases/download/v${version}/sops-v${version}.${platformType.toLowerCase()}`;
+      await downloadFile(url, targetPath);
+      await chmodPromise(targetPath, 0o775);
+    },
+  },
+};
+
+// UTILS
+const error = (text, code) => {
+  console.error(text);
+  process.exit(code || 1);
+};
+
+const isNil = value => {
+  return typeof value === 'undefined' || value == null;
+};
+
+const linesPrefixAndSuffix = (prefix, suffix) => lines => {
+  return lines
+    .map(l => l.trim())
+    .filter(l => l.startsWith(prefix) && l.endsWith(suffix))
+    .map(l => l.substring(prefix.length, l.length - suffix.length));
+};
+
+// HELPERS
+const getEnv = argv => {
+  const inputEnv = yargs(argv).argv['_'][0];
+  const inputEnvDefaulted = isNil(inputEnv) ? 'sandbox' : inputEnv;
+  const env = envs[inputEnvDefaulted];
+  if (isNil(env)) {
+    error(`Unknown environment: ${inputEnv}`);
+  }
+  env.env = inputEnvDefaulted;
+  return env;
+};
+
+const getIsotomaProfile = argv => {
+  return !!yargs(argv).argv.isotomaProfile;
+};
+
+const readAvailableProfiles = () => {
+  const configFilePath = path.join(os.homedir(), '.aws', 'config');
+  const configFile = String(fs.readFileSync(configFilePath));
+  const configFileLines = configFile.split('\n');
+  return new Set(linesPrefixAndSuffix('[profile ', ']')(configFileLines));
+};
+
+const selectProfile = validProfilesForEnv => {
+  const userAvailableProfiles = readAvailableProfiles();
+  const profile = validProfilesForEnv.find(profile => userAvailableProfiles.has(profile));
+  if (isNil(profile)) {
+    error(`No user profile matches: ${validProfilesForEnv.join(', ')}`);
+  }
+  return profile;
+};
+
+const exportEnvVar = (name, value) => {
+  console.log(`export ${name}='${value}'`);
+};
+
+const downloadDependencyIfNeeded = async (name, targetVersion, config) => {
+  let updateNeeded = true;
+  try {
+    updateNeeded = await config.updateRequired(targetVersion);
+  } catch (err) {
+    // do nothing
+  }
+  if (updateNeeded) {
+    console.error(`${name}: update needed (→ ${targetVersion})...`);
+    await config.download(targetVersion, os.type(), path.join(__dirname, config.name || name));
+  } else {
+    console.error(`${name}: up to date (${targetVersion})`);
+  }
+};
+
+const downloadDependencies = async () => {
+  return Promise.all(
+    Object.entries(dependencies).map(([name, config]) => {
+      const targetVersion = versions[name];
+      return downloadDependencyIfNeeded(name, targetVersion, config);
+    }),
+  );
+};
+
+// MAIN
+const main = async () => {
+  const binDir = __dirname;
+  const env = getEnv(process.argv[2]);
+
+  try {
+    await downloadDependencies();
+  } catch (err) {
+    console.error('Error downloading dependencies');
+    console.error(err);
+  }
+
+  const isotomaProfile = getIsotomaProfile(process.argv);
+  if (isotomaProfile) {
+    const profile = selectProfile(env.profiles || [env.profile]);
+    exportEnvVar('AWS_PROFILE', profile);
+  }
+  exportEnvVar('AWS_DEFAULT_REGION', 'eu-west-2');
+  exportEnvVar('FRG_ENV', env.env);
+  exportEnvVar('SOPS_KMS_ARN', env.kmsKeyArn);
+  exportEnvVar('AWS_SDK_LOAD_CONFIG', 'true');
+  exportEnvVar('PATH', `${binDir}:${process.env.PATH}`);
+  console.error(`Activated for environment ${env.env}`);
+};
+
+main();

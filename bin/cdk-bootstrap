@@ -1,0 +1,18 @@
+#!/bin/bash -ex
+
+input_environment="$1"
+
+if [[ -z $input_environment ]]; then
+    >&2 echo "Missing environment: $input_environment"
+    exit 1
+fi
+
+npm run build
+# Use the new flow which generates 0 asset parameters
+# https://github.com/aws/aws-cdk/issues/3463
+# also trust the infrastructure account
+cmd="npm run -- env CDK_NEW_BOOTSTRAP=1 ENVIRONMENT_NAME=${input_environment} cdk bootstrap \
+    --cloudformation-execution-policies arn:aws:iam::aws:policy/AdministratorAccess \
+    --trust 943116035304"
+
+eval $cmd
