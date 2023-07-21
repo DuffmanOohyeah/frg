@@ -1,0 +1,562 @@
+type Query @aws_iam @aws_api_key @aws_cognito_user_pools {
+  # WP Api
+  getContentPage(path: String!, urlOverride: String): Webpage
+  getBlogList(page: Int = 1, category: String, urlOverride: String): BlogList
+  getBlogCategoryList: [Category!]!
+  getSitemapBlogList: [SlugBlogListItem!]!
+
+  # Search Api
+  searchJobs(
+    keyword: String
+    location: String
+    role: [String!]
+    level: [String!]
+    jobType: String
+    page: Int
+    remote: Boolean
+    security: Boolean
+    addedSince: String
+    salaryFrom: String
+    salaryTo: String
+    salaryCurrency: String
+    product: String
+    segment: String
+  ): JobList!
+  getJobSearchFacetCounts(keyword: String, location: String, jobType: String): GetJobSearchFacetCounts
+  getJob(reference: String!): Job
+  searchCandidates(keyword: String, location: String, jobType: String, skills: [String!], jobTitles: [String!], levels: [String!], addedSince: String, page: Int): CandidateList!
+  getCandidateSearchFacets(keyword: String, location: String, jobType: String): CandidateSearchFacets
+  getCandidate(id: String!): Candidate
+  getAllJobsForSitemap: [GetAllJobsForSitemapResponse!]!
+  getAllJobsForIndeedSitemap(lastSearchJob: IndeedSitemapJobInput): [IndeedSitemapJob!]!
+
+  # Candidate Profile Api
+  getSkills: [String!]!
+  getAccreditations: [String!]!
+  getEmploymentPreferences: [String!]!
+  parseCV(filename: String!): DaxtraParsedCV!
+  parseCVTemporary(filetype: String!, signedGetUrl: String!): DaxtraParsedCV!
+  getSignedUrl(filename: String!, filetype: String!): CVSignUrls
+  getSignedUrlTemporary(filename: String!, filetype: String!): CVSignUrls
+  getCvDownloadUrl: String!
+  # Candidate Profile - Saved Job Searches
+  getSavedJobSearches: [SavedJobSearch!]!
+  saveJobSearch(
+    searchName: String!
+    keyword: String
+    location: String
+    role: [String!]
+    level: [String!]
+    jobType: String
+    page: Int
+    remote: Boolean
+    security: Boolean
+    newJobs: Boolean
+    salaryFrom: String
+    salaryTo: String
+    salaryCurrency: String
+    emailAlert: Boolean
+    segment: String
+    product: String
+  ): ConfirmSavedJob!
+  deleteSavedJobSearch(id: String!): DeleteSavedJobSearchConfirm!
+  updateSavedJobSearch(id: String!, enable: Boolean!): UpdateSavedJobSearchConfirm!
+  # Candidate Profile - Candidate User
+  createCandidateProfile(firstName: String!, lastName: String!): CandidateProfile!
+  getCandidateProfile: CandidateProfile!
+  updateCandidateProfile(profile: CandidateProfileInput!): CandidateProfile!
+  # Candidate Profile - Job Shortlist
+  addJobToShortlist(jobId: String!): EditJobShortlistResponse!
+  removeJobFromShortlist(jobId: String!): EditJobShortlistResponse!
+  getJobShortlist: JobShortlistResponse
+  # Candidate Profile - Job Application
+  applyForJob(jobId: String!): ApplyForJobResponse!
+  getJobApplicationLogs: JobApplicationLogsResponse
+
+  # Employer Profile Api
+  createEmployerProfile(profile: EmployerProfileInput!): EmployerProfile
+  getEmployerProfile: EmployerProfile
+  updateEmployerProfile(profile: EmployerProfileInput!): EmployerProfile
+  # Employer Profile - Candidate Shortlist
+  addCandidateToShortlist(candidateId: String!): EditCandidateShortlistResponse!
+  removeCandidateFromShortlist(candidateId: String!): EditCandidateShortlistResponse!
+  getCandidateShortlist: CandidateShortlistResponse
+  # Employer Profile - Saved Searches
+  saveCandidateSearch(
+    searchName: String!
+    keyword: String
+    location: String
+    skills: [String!]
+    jobTitles: [String!]
+    jobType: String
+    levels: [String!]
+    newCandidates: Boolean
+    emailAlert: Boolean
+  ): SavedCandidateSearch!
+  getSavedCandidateSearches: [SavedCandidateSearch!]!
+  deleteSavedCandidateSearch(id: String!): DeleteSavedJobSearchConfirm!
+  updateSavedCandidateSearch(id: String!, enable: Boolean!): UpdateSavedJobSearchConfirm!
+  # Employer Profile - Resume Requests
+  addEmployerResumeRequestsLogs(candidateId: String!): AddEmployerResumeRequestsResponse!
+  getEmployerResumeRequestsLogs: GetEmployerResumeRequestsResponse
+
+  # Pardot Visitor Assign
+  linkSiteVisitorToPardotAccount(trackingId: String!): LinkSiteVisitorToPardotAccountResponse
+}
+
+type CVSignUrls @aws_iam @aws_api_key @aws_cognito_user_pools {
+  put: String!
+  get: String!
+}
+
+type BlogSummary @aws_iam @aws_api_key @aws_cognito_user_pools {
+  slug: String!
+  title: String!
+  excerptHtml: String!
+  file: String!
+}
+
+type Webpage @aws_iam @aws_api_key @aws_cognito_user_pools {
+  bodyHtml: String!
+  title: String!
+  author: String!
+  categories: [Category!]!
+  excerptHtml: String!
+  publishedGmt: String!
+  modifiedGmt: String!
+  slug: String!
+}
+
+type Category @aws_iam @aws_api_key @aws_cognito_user_pools {
+  slug: String!
+  name: String!
+  id: Int!
+  count: Int!
+}
+
+type SlugBlogListItem @aws_iam @aws_api_key @aws_cognito_user_pools {
+  slug: String!
+  modifiedGmt: String!
+}
+
+type BlogList @aws_iam @aws_api_key @aws_cognito_user_pools {
+  pageList: [BlogSummary!]!
+  pageTotals: PageTotals!
+}
+
+type PageTotals @aws_iam @aws_api_key @aws_cognito_user_pools {
+  postTotal: Int!
+  postPages: Int!
+}
+
+type SearchPagination @aws_iam @aws_api_key @aws_cognito_user_pools {
+  value: Int!
+  relation: String!
+}
+
+type JobLocation @aws_iam @aws_api_key @aws_cognito_user_pools {
+  description: String!
+  country: String!
+  region: String!
+}
+input JobLocationInput {
+  description: String!
+  country: String!
+  region: String!
+}
+
+type JobSalary @aws_iam @aws_api_key @aws_cognito_user_pools {
+  from: Int
+  to: Int
+  currency: String!
+  description: String!
+}
+input JobSalaryInput {
+  from: Int
+  to: Int
+  currency: String!
+  description: String!
+}
+
+type Job @aws_iam @aws_api_key @aws_cognito_user_pools {
+  indexedAt: String!
+  lastModified: String!
+  contactName: String!
+  contactEmail: String!
+  applicationEmail: String!
+  reference: String!
+  title: String!
+  type: String!
+  skills: [String!]!
+  description: String!
+  product: String
+  segment: String
+  role: String!
+  remote: Boolean!
+  needsSecurityClearance: Boolean!
+  seniority: String!
+  location: JobLocation!
+  salary: JobSalary!
+}
+
+type JobList @aws_iam @aws_api_key @aws_cognito_user_pools {
+  items: [Job!]!
+  pagination: SearchPagination!
+}
+
+type CandidateSkills @aws_iam @aws_api_key @aws_cognito_user_pools {
+  yearsExperience: Int
+  score: Int!
+  name: String!
+}
+
+type CandidateSalary @aws_iam @aws_api_key @aws_cognito_user_pools {
+  currency: String
+  normalised: Int
+  amount: Int
+  description: String
+}
+
+type CandidateRecruiter @aws_iam @aws_api_key @aws_cognito_user_pools {
+  phone: String
+  name: String!
+  email: String!
+}
+
+type CandidateLocation @aws_iam @aws_api_key @aws_cognito_user_pools {
+  description: String!
+}
+
+type Candidate @aws_iam @aws_api_key @aws_cognito_user_pools {
+  id: String!
+  indexedAt: String!
+  lastModified: String!
+  salary: CandidateSalary
+  recruiter: CandidateRecruiter
+  location: CandidateLocation
+  willingToWorkRemotely: Boolean
+  willingToRelocate: Boolean
+  type: String
+  skills: [CandidateSkills!]!
+  profile: String
+  product: [String!]!
+  normalisedJobTitle: String
+  level: String
+  language: [String!]
+  jobTitle: String
+  industryExperience: [String!]
+  advertId: String
+  education: String
+  currentStatus: String
+  advertTitle: String
+  accreditations: [String!]
+}
+
+type CandidateList @aws_iam @aws_api_key @aws_cognito_user_pools {
+  items: [Candidate!]!
+  pagination: SearchPagination!
+}
+
+type DaxtraParsePerson @aws_iam @aws_api_key @aws_cognito_user_pools {
+  FormattedName: String
+  FamilyName: String
+  GivenName: String
+  sex: String
+}
+
+type DaxtraParseEmploymentHistory @aws_iam @aws_api_key @aws_cognito_user_pools {
+  employerOrgType: String
+  EndDate: String
+  MonthsOfWork: Float
+  EmployerOrgName: String
+  Title: [String!]
+  OrgName: String
+  PositionType: String
+  JobArea: String
+  JobGrade: String
+  StartDate: String
+  Description: String
+}
+
+type DaxtraSkillUse @aws_iam @aws_api_key @aws_cognito_user_pools {
+  value: Float
+  type: String
+}
+
+type DaxtraParseCompetency @aws_iam @aws_api_key @aws_cognito_user_pools {
+  skillLevel: Float
+  skillName: String
+  description: String
+  auth: Boolean
+  skillUsed: DaxtraSkillUse
+  lastUsed: String
+  skillProficiency: String
+  skillAliasArray: [String!]
+}
+
+type DaxtraParseExperienceSummary @aws_iam @aws_api_key @aws_cognito_user_pools {
+  TotalYearsOfManagementWorkExperience: Float
+  TotalYearsOfLowLevelManagementWorkExperience: Float
+  TotalMonthsOfWorkExperience: Float
+  ExecutiveBrief: String
+  TotalMonthsOfLowLevelManagementWorkExperience: Float
+  TotalMonthsOfManagementWorkExperience: Float
+  TotalYearsOfWorkExperience: Float
+  ManagementRecord: String
+}
+
+type DaxtraParsedCV @aws_iam @aws_api_key @aws_cognito_user_pools {
+  person: DaxtraParsePerson
+  employmentHistory: [DaxtraParseEmploymentHistory!]
+  skills: [DaxtraParseCompetency!]
+  lang: String
+  experience: DaxtraParseExperienceSummary
+}
+
+type JobLevels @aws_iam @aws_api_key @aws_cognito_user_pools {
+  key: String!
+  docCount: Int!
+}
+
+type JobRoles @aws_iam @aws_api_key @aws_cognito_user_pools {
+  key: String!
+  docCount: Int!
+}
+
+type JobSecurity @aws_iam @aws_api_key @aws_cognito_user_pools {
+  key: String!
+  docCount: Int!
+  value: String
+}
+
+type JobRemote @aws_iam @aws_api_key @aws_cognito_user_pools {
+  key: String!
+  docCount: Int!
+  value: String
+}
+
+type JobNew @aws_iam @aws_api_key @aws_cognito_user_pools {
+  key: String
+  docCount: Int
+  value: String
+}
+
+type JobCurrencies @aws_iam @aws_api_key @aws_cognito_user_pools {
+  key: String
+  docCount: Int
+}
+
+type GetJobSearchFacetCounts @aws_iam @aws_api_key @aws_cognito_user_pools {
+  roles: [JobRoles!]!
+  levels: [JobLevels!]!
+  security: [JobSecurity!]!
+  remote: [JobRemote!]!
+  newJobs: [JobNew!]!
+  currencies: [JobCurrencies!]!
+}
+
+type ConfirmSavedJob @aws_cognito_user_pools {
+  searchName: String!
+  keyword: String
+  location: String
+  role: [String!]
+  level: [String!]
+  jobType: String
+  page: Int
+  remote: Boolean
+  security: Boolean
+  newJobs: Boolean
+  salaryFrom: String
+  salaryTo: String
+  salaryCurrency: String
+  product: String
+  segment: String
+}
+
+type SavedJobSearchParams @aws_cognito_user_pools {
+  keyword: String
+  location: String
+  role: [String!]
+  level: [String!]
+  jobType: String
+  remote: Boolean
+  security: Boolean
+  newJobs: Boolean
+  salaryFrom: String
+  salaryTo: String
+  salaryCurrency: String
+  segment: String
+  product: String
+}
+
+type SavedJobSearch @aws_cognito_user_pools {
+  searchName: String!
+  id: String!
+  params: SavedJobSearchParams!
+  emailAlert: Boolean
+}
+
+type DeleteSavedJobSearchConfirm @aws_cognito_user_pools {
+  id: String!
+}
+
+type UpdateSavedJobSearchConfirm @aws_cognito_user_pools {
+  enable: Boolean!
+}
+
+type CandidateSearchFacet @aws_iam @aws_api_key @aws_cognito_user_pools {
+  key: String!
+  docCount: Int!
+}
+type CandidateNew @aws_iam @aws_api_key @aws_cognito_user_pools {
+  key: String
+  docCount: Int
+  value: String
+}
+type CandidateSearchFacets @aws_iam @aws_api_key @aws_cognito_user_pools {
+  skills: [CandidateSearchFacet!]!
+  jobTitles: [CandidateSearchFacet!]!
+  levels: [CandidateSearchFacet!]!
+  newCandidates: [CandidateNew!]!
+}
+
+type CandidateProfileSkill @aws_cognito_user_pools {
+  name: String!
+  score: Int
+  yearsExperience: Int
+}
+type CandidateProfile @aws_cognito_user_pools {
+  id: String
+  summary: String
+  social: String
+  phone: String
+  linkedIn: String
+  lastName: String!
+  jobType: String
+  jobTitle: String
+  firstName: String!
+  email: String!
+  currentLocation: String
+  currentCompany: String
+  availability: String
+  willingToRelocate: Boolean
+  skills: [CandidateProfileSkill!]
+  accreditations: [String!]
+  cvFileUrl: String
+  cvFile: String
+}
+input CandidateProfileSkillInput {
+  name: String!
+  score: Int
+  yearsExperience: Int
+}
+input CandidateProfileInput {
+  id: String
+  summary: String
+  social: String
+  phone: String
+  linkedIn: String
+  lastName: String!
+  jobType: String
+  jobTitle: String
+  firstName: String!
+  currentLocation: String
+  currentCompany: String
+  availability: String
+  willingToRelocate: Boolean
+  skills: [CandidateProfileSkillInput!]
+  accreditations: [String!]
+  cvFileUrl: String
+  cvFile: String
+}
+
+# Employer Profile
+type EmployerProfile @aws_cognito_user_pools {
+  firstName: String!
+  lastName: String!
+  email: String!
+  company: String!
+  phone: String!
+  marketingConsent: Boolean
+}
+input EmployerProfileInput {
+  firstName: String!
+  lastName: String!
+  company: String!
+  phone: String!
+  marketingConsent: Boolean
+}
+
+# Shortlisting Candidates
+type EditCandidateShortlistResponse @aws_cognito_user_pools {
+  candidateId: String!
+}
+type CandidateShortlistResponse @aws_cognito_user_pools {
+  candidateIds: [String!]!
+}
+
+# Shortlisting Jobs
+type EditJobShortlistResponse @aws_cognito_user_pools {
+  jobId: String!
+}
+type JobShortlistResponse @aws_cognito_user_pools {
+  jobIds: [String!]!
+}
+
+# Job Applications
+type ApplyForJobResponse @aws_cognito_user_pools {
+  jobId: String!
+}
+type JobApplicationLogsResponse @aws_cognito_user_pools {
+  jobIds: [String!]!
+}
+# saving searches
+type SavedCandidateSearchParams @aws_cognito_user_pools {
+  keyword: String
+  location: String
+  jobType: String
+  skills: [String!]
+  jobTitles: [String!]
+  levels: [String!]
+  newCandidates: Boolean
+}
+
+type SavedCandidateSearch @aws_cognito_user_pools {
+  searchName: String!
+  id: String!
+  params: SavedCandidateSearchParams!
+  emailAlert: Boolean
+}
+
+# Employer Resume Requests
+type AddEmployerResumeRequestsResponse @aws_cognito_user_pools {
+  candidateId: String!
+}
+type GetEmployerResumeRequestsResponse @aws_cognito_user_pools {
+  candidateIds: [String!]!
+}
+
+type GetAllJobsForSitemapResponse @aws_iam @aws_api_key @aws_cognito_user_pools {
+  lastModified: String
+  reference: String
+  title: String
+}
+
+type IndeedSitemapJob @aws_iam @aws_api_key @aws_cognito_user_pools {
+  title: String!
+  lastModified: String!
+  reference: String!
+  location: JobLocation!
+  description: String!
+  salary: JobSalary!
+  type: String!
+}
+input IndeedSitemapJobInput {
+  lastModified: String!
+  reference: String!
+}
+
+# Pardot Visitor Assign response
+type LinkSiteVisitorToPardotAccountResponse @aws_cognito_user_pools {
+  prospectId: Int
+}
