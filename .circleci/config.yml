@@ -1,0 +1,831 @@
+jobs:
+  cdk:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - cdk-deps-{{ checksum "package.json" }}
+            - cdk-deps-
+
+      - run: npm ci
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: lint-deps-{{ checksum "package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  wordpress-api:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/wordpress/api
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - wordpress-api-deps-{{ checksum "~/repo/backend/package.json" }}
+            - wordpress-api-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: wordpress-api-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  link-site-visitor-to-pardot-account:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/link-site-visitor-to-pardot-account
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - wordpress-api-deps-{{ checksum "~/repo/backend/package.json" }}
+            - wordpress-api-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: wordpress-api-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+  email-alerts-get-candidates:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/email-alerts/getCandidates
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - email-alerts-get-candidates-deps-{{ checksum "~/repo/backend/package.json" }}
+            - email-alerts-get-candidates-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: email-alerts-get-candidates-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  email-alerts-get-employers:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/email-alerts/getEmployers
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - email-alerts-get-employers-deps-{{ checksum "~/repo/backend/package.json" }}
+            - email-alerts-get-employers-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: email-alerts-get-employers-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  email-alerts-get-users-alerts:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/email-alerts/getUsersAlerts
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - email-alerts-get-users-alerts-deps-{{ checksum "~/repo/backend/package.json" }}
+            - email-alerts-get-users-alerts-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: email-alerts-get-users-alerts-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  email-alerts-send-email:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/email-alerts/sendEmail
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - email-alerts-send-email-deps-{{ checksum "~/repo/backend/package.json" }}
+            - email-alerts-send-email-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: email-alerts-send-email-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  email-alerts-send-request:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/email-alerts/sendRequest
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - email-alerts-send-request-deps-{{ checksum "~/repo/backend/package.json" }}
+            - email-alerts-send-request-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: email-alerts-send-request-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  email-alerts-user-fan-out:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/email-alerts/userFanOut
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - email-alerts-user-fan-out-deps-{{ checksum "~/repo/backend/package.json" }}
+            - email-alerts-user-fan-out-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: email-alerts-user-fan-out-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  wordpress-fetcher:
+    docker:
+      - image: cimg/python:3.8
+
+    working_directory: ~/repo/backend/wordpress/fetcher
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run: mkdir -p $HOME/bin/
+      - run: wget https://github.com/plumdog/dirbuild/releases/download/0.5.0/dirbuild-linux -O $HOME/bin/dirbuild
+      - run: chmod a+x $HOME/bin/dirbuild
+
+      - run: make lint-check
+
+      - run:
+          name: test
+          command: make test
+
+  search-api:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/search
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - search-api-deps-{{ checksum "~/repo/backend/package.json" }}
+            - search-api-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: search-api-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  apikeys:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/apikeys
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - apikeys-deps-{{ checksum "~/repo/backend/package.json" }}
+            - apikeys-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: apikeys-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  custommessage:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/custommessage
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - custommessage-deps-{{ checksum "~/repo/backend/package.json" }}
+            - custommessage-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: custommessage-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  candidate-profile:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/candidate-profile
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - candidate-profile-deps-{{ checksum "~/repo/backend/package.json" }}
+            - candidate-profile-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: candidate-profile-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  employer-profile:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/employer-profile
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - employer-profile-deps-{{ checksum "~/repo/backend/package.json" }}
+            - employer-profile-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: employer-profile-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  shared-lambda-handler:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/shared/lambda-handler
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - shared-lambda-handler-deps-{{ checksum "~/repo/backend/package.json" }}
+            - shared-lambda-handler-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: shared-lambda-handler-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  search-ingestion-shared:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/search-ingestion/shared
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - search-shared-deps-{{ checksum "~/repo/backend/package.json" }}
+            - search-shared-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: search-shared-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  search-ingestion-s3-to-es:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/search-ingestion/s3-to-es
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - s3-to-es-deps-{{ checksum "~/repo/backend/package.json" }}
+            - s3-to-es-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: s3-to-es-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  search-ingestion-reindex:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/search-ingestion/reindex
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - reindex-deps-{{ checksum "~/repo/backend/package.json" }}
+            - reindex-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: reindex-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  search-ingestion-delete-older-than:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/search-ingestion/delete-older-than
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - delete-older-than-deps-{{ checksum "~/repo/backend/package.json" }}
+            - delete-older-than-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: delete-older-than-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  search-ingestion-broadbean-api:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/search-ingestion/broadbean-api
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - broadbean-api-deps-{{ checksum "~/repo/backend/package.json" }}
+            - broadbean-api-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: broadbean-api-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  search-integration-tests:
+    docker:
+      - image: cimg/node:14.20
+      - image: elasticsearch:7.4.2
+        environment:
+          xpack.security.enabled: false
+          transport.host: localhost
+
+    working_directory: ~/repo/backend/search-integration-tests/
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - search-integration-tests-deps-{{ checksum "package.json" }}
+            - search-integration-tests-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: search-integration-tests-deps-{{ checksum "package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  candidate-search-redirector:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/backend/candidate-search-redirector/
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - candidate-search-redirector-deps-{{ checksum "~/repo/backend/package.json" }}
+            - candidate-search-redirector-deps-
+
+      - run: (cd ~/repo/backend && npm ci)
+
+      - save_cache:
+          paths:
+            - ~/repo/backend/node_modules
+          key: candidate-search-redirector-deps-{{ checksum "~/repo/backend/package.json" }}
+
+      - run: make lint-check
+
+      - run: make test
+
+  frontend:
+    docker:
+      - image: circleci/node:12
+
+    working_directory: ~/repo/frontend
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - restore_cache:
+          keys:
+            - frontend-deps-{{ checksum "package.json" }}
+            - frontend-deps-
+
+      - run: npm ci
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: frontend-deps-{{ checksum "package.json" }}
+
+      - run: make lint-check
+
+      - run: make compile
+
+      - run: make test
+
+  storybook:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/frontend
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - restore_cache:
+          keys:
+            - storybook-deps-{{ checksum "package.json" }}
+            - storybook-deps-
+
+      - run: npm ci
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: storybook-deps-{{ checksum "package.json" }}
+
+      - run: make storybook-build
+
+  threat-model:
+    docker:
+      - image: cimg/base:current
+
+    working_directory: ~/repo/docs/threat_model
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: install graphviz and pngcheck
+          command: 'sudo apt update && sudo apt install graphviz pngcheck'
+
+      - setup_remote_docker
+      - run:
+          name: Lint YAML
+          command: 'make lint'
+
+      - run:
+          name: install npm
+          command: 'curl -sL https://deb.nodesource.com/setup_14.x | sudo -E bash -; sudo apt-get install -y nodejs'
+
+      - run:
+          name: 'Check files not checked in'
+          command: '! make valid'
+
+      - run:
+          name: 'Generate files'
+          command: 'make rebuild'
+
+      - run:
+          name: 'Check has produced valid files'
+          command: 'make valid'
+
+  migration-scripts:
+    docker:
+      - image: cimg/node:14.20
+
+    working_directory: ~/repo/scripts/migration-scripts
+
+    steps:
+      - checkout:
+          path: ~/repo
+
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@next-8'
+
+      - restore_cache:
+          keys:
+            - migration-scripts-deps-{{ checksum "package.json" }}
+            - migration-scripts-deps-
+
+      - run: npm ci
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: migration-scripts-deps-{{ checksum "package.json" }}
+
+      - run: make lint-check
+
+      - run: make compile
+
+workflows:
+  version: 2
+  test-all:
+    jobs:
+      - cdk
+      - frontend
+      - storybook
+      - wordpress-api
+      - wordpress-fetcher
+      - apikeys
+      - candidate-profile
+      - custommessage
+      - employer-profile
+      - link-site-visitor-to-pardot-account
+      - shared-lambda-handler
+      - search-ingestion-shared
+      - search-ingestion-s3-to-es
+      - search-ingestion-reindex
+      - search-ingestion-delete-older-than
+      - search-ingestion-broadbean-api
+      - search-integration-tests
+      - search-api
+      - candidate-search-redirector
+      - email-alerts-get-candidates
+      - email-alerts-get-employers
+      - email-alerts-get-users-alerts
+      - email-alerts-send-email
+      - email-alerts-send-request
+      - email-alerts-user-fan-out
+      - threat-model
+      - migration-scripts
