@@ -1,0 +1,16 @@
+*
+!next.config.js
+!package.json
+!package-lock.json
+!public
+!public/*
+!public/**/*
+!src
+!src/*
+!src/**/*
+!tsconfig.json
+!server.js
+!.eslintignore
+!.eslintrc.js
+!.prettierignore
+!.prettierrc.js

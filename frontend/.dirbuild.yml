@@ -1,0 +1,22 @@
+targets:
+  build:
+    depends:
+      - '**/*.ts?(x)'
+      - 'package-lock.json'
+      - package.json
+      - next.config.js
+      - Makefile
+      - public/**/*
+      - tsconfig.json
+    dependsExclude:
+      - '**/*.d.ts?(x)'
+      - '**/*.test.ts?(x)'
+      - '**/__?(pages)tests__/**/*'
+      - bin/**/*
+      - build/**/*
+      - coverage/**/*
+      - .next/**/*
+      - .storybook/**/*
+      - node_modules/**/*
+    output: .next/
+    command: make build-no-cache
